@@ -4,15 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#123d35">
-  <meta name="description" content="Collect SDG stamps across the Living Impact experience.">
-  <title>Living Impact Passport</title>
-  <link rel="stylesheet" href="/styles.css?v=2">
+  <meta name="description" content="Collect SDG stamps across the Beyond Borders experience.">
+  <title>Beyond Borders Passport</title>
+  <link rel="stylesheet" href="/styles.css?v=3">
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="#passport" aria-label="Living Impact Passport home">
+    <a class="brand" href="#passport" aria-label="Beyond Borders Passport home">
       <span class="brand-flower" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-      <span><strong>Living Impact</strong><small>SDG Passport</small></span>
+      <span><strong>Beyond Borders</strong><small>SDG Passport</small></span>
     </a>
     <div class="header-actions">
       <button class="quiet-button desktop-only" id="downloadTop">Download passport</button>
@@ -27,7 +27,7 @@
       <div class="status-card">
         <div class="event-lockup">
           <span class="event-kicker">9 - 15 February 2026 · Bangkok</span>
-          <h1>Living Impact<br><em>Passport</em></h1>
+          <h1>Beyond Borders<br><em>Passport</em></h1>
         </div>
         <div class="status-actions">
           <button class="scan-button" id="openScanner"><span class="scan-symbol">⌗</span><span><small>Ready when you are</small>Scan activity QR</span><b>→</b></button>
@@ -47,7 +47,7 @@
     </section>
 
     <section class="schedule-section" id="schedule">
-      <div class="section-title"><div><span class="micro-label">Living Impact 2026</span><h2>Event journey</h2></div><p>Six days of Thai culture, shared learning, and action across the Sustainable Development Goals.</p></div>
+      <div class="section-title"><div><span class="micro-label">Beyond Borders 2026</span><h2>Event journey</h2></div><p>Six days of Thai culture, shared learning, and action across the Sustainable Development Goals.</p></div>
       <div class="schedule-list" id="scheduleList"><div class="loading">Loading the journey…</div></div>
     </section>
 
@@ -58,8 +58,8 @@
   </main>
 
   <footer>
-    <div class="footer-brand"><span class="brand-flower" aria-hidden="true"><i></i><i></i><i></i><i></i></span><p><strong>Living Impact</strong><small>AIESEC Club · SDG Passport</small></p></div>
-    <a href="https://www.linkedin.com/in/khine-khant-1571xyz/" target="_blank" rel="noopener noreferrer">Created with ❤️ by Khine Khant <span>↗</span></a>
+    <div class="footer-brand"><span class="brand-flower" aria-hidden="true"><i></i><i></i><i></i><i></i></span><p><strong>Beyond Borders</strong><small>AIESEC Club · SDG Passport</small></p></div>
+    <a href="https://www.linkedin.com/in/knsxw" target="_blank" rel="noopener noreferrer">Created with ❤️ by Khine Khant <span>↗</span></a>
   </footer>
 
   <dialog id="scannerModal" class="modal">
@@ -77,7 +77,7 @@
   <dialog id="loginModal" class="modal">
     <div class="modal-card login-card">
       <button class="close-button" data-close aria-label="Close sign in">×</button>
-      <div class="google-mark">G</div><span class="micro-label">Participant account</span><h2>Keep your passport with you.</h2><p>Sign in once to collect stamps across every Living Impact activity.</p>
+      <div class="google-mark">G</div><span class="micro-label">Participant account</span><h2>Keep your passport with you.</h2><p>Sign in once to collect stamps across every Beyond Borders activity.</p>
       <a class="google-button" id="googleButton" href="/auth/google"><b>G</b><span>Continue with Google</span></a>
       <button class="demo-login" id="demoLogin" hidden>Enter demo passport</button>
       <small class="auth-note">Google sign-in requires organizer configuration on the server.</small>
@@ -92,6 +92,6 @@
 
   <div class="toast" id="toast" role="status"><span>✓</span><div><b id="toastTitle">Done</b><small id="toastCopy">Your passport is up to date.</small></div></div>
   <canvas id="storyCanvas" width="1080" height="1920" hidden></canvas>
-  <script src="/app.js?v=2"></script>
+  <script src="/app.js?v=3"></script>
 </body>
 </html>

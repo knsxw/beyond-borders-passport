@@ -210,5 +210,5 @@ async function ensureDatabase() {
 }
 
 ensureDatabase()
-  .then(() => app.listen(port, () => console.log(`Living Impact Passport running on port ${port}`)))
+  .then(() => app.listen(port, () => console.log(`Beyond Borders Passport running on port ${port}`)))
   .catch(error => { console.error('Database initialization failed', error); process.exit(1); });

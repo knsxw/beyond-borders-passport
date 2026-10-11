@@ -1,8 +1,8 @@
 {
-  "name": "living-impact-passport",
+  "name": "beyond-borders-passport",
   "version": "1.0.0",
   "private": true,
-  "description": "Living Impact digital SDG passport",
+  "description": "Beyond Borders digital SDG passport",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

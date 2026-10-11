@@ -1,11 +1,11 @@
-# Living Impact Passport
+# Beyond Borders Passport
 
-A responsive digital stamp passport for the **Living Impact 2026** event by AIESEC Club. Participants sign in with Google, scan an activity QR code, collect one or more SDG stamps, and download their passport as a 1080 × 1920 Instagram Story PNG.
+A responsive digital stamp passport for the **Beyond Borders 2026** event by AIESEC Club. Participants sign in with Google, scan an activity QR code, collect one or more SDG stamps, and download their personalized passport as a 1080 × 1920 Instagram Story PNG.
 
 ## Included
 
 - All 17 SDG stamps with official goal colors
-- Six event days based on the Living Impact agenda
+- Six event days based on the previous event agenda
 - Google OAuth 2.0 authentication
 - PostgreSQL-backed participants, QR scans, stamps, and sessions
 - Camera QR scanner with a manual-code fallback
