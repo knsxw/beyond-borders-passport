@@ -274,7 +274,7 @@ async function ensureDatabase() {
       title=EXCLUDED.title,event_date=EXCLUDED.event_date,time_label=EXCLUDED.time_label,
       location=EXCLUDED.location,description=EXCLUDED.description,sdg_ids=EXCLUDED.sdg_ids`, activity);
     await pool.query(`INSERT INTO qr_codes (code, activity_slug) VALUES ($1,$2) ON CONFLICT (code) DO NOTHING`,
-      [`LIVING-DAY-${activities.indexOf(activity)+1}`, activity[0]]);
+      [`BEYOND-BORDERS-DAY-${activities.indexOf(activity)+1}`, activity[0]]);
   }
   await pool.query(`DELETE FROM stamps`);
   await pool.query(`INSERT INTO stamps (user_id, sdg_id, activity_slug, earned_at)

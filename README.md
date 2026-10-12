@@ -34,12 +34,12 @@ Open `http://localhost:8080`. The database schema and event seed data are create
 Keep `DEMO_MODE=true` to expose a local demo passport. Seeded QR values are:
 
 ```text
-LIVING-DAY-1
-LIVING-DAY-2
-LIVING-DAY-3
-LIVING-DAY-4
-LIVING-DAY-5
-LIVING-DAY-6
+BEYOND-BORDERS-DAY-1
+BEYOND-BORDERS-DAY-2
+BEYOND-BORDERS-DAY-3
+BEYOND-BORDERS-DAY-4
+BEYOND-BORDERS-DAY-5
+BEYOND-BORDERS-DAY-6
 ```
 
 Set `DEMO_MODE=false` in production.
