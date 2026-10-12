@@ -10,7 +10,9 @@ function escapeHtml(value=''){return String(value).replace(/[&<>'"]/g,char=>({'&
 
 function renderUser(){
   $('#accountName').textContent=state.user?.name||'Guest passport';$('#accountState').textContent=state.user?'Passport synced':'Sign in to save';
-  const avatar=$('#avatar');avatar.innerHTML=state.user?.avatar_url?`<img src="${escapeHtml(state.user.avatar_url)}" alt="">`:escapeHtml((state.user?.name||'G').charAt(0).toUpperCase());
+  const avatarMarkup=state.user?.avatar_url?`<img src="${escapeHtml(state.user.avatar_url)}" alt="">`:escapeHtml((state.user?.name||'G').charAt(0).toUpperCase());
+  $('#avatar').innerHTML=avatarMarkup;$('#accountModalAvatar').innerHTML=avatarMarkup;
+  $('#accountModalName').textContent=state.user?.name||'Your passport';$('#accountModalEmail').textContent=state.user?.email||'';
 }
 function renderPassport(pop=[]){
   const ids=state.stamps.map(item=>Number(item.sdg_id));
@@ -73,8 +75,9 @@ async function downloadStory(){
   canvas.toBlob(blob=>{if(!blob)return toast('Download failed','Please try again.');const url=URL.createObjectURL(blob),link=document.createElement('a'),participantSlug=participantName.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'participant';link.href=url;link.download=`beyond-borders-${participantSlug}-passport.png`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('Story downloaded',`${participantName}'s 1080 × 1920 passport PNG is ready.`)},'image/png');
 }
 
-$('#openScanner').onclick=()=>requireLogin()&&openDialog($('#scannerModal'));$('#startCamera').onclick=startCamera;$('#downloadPassport').onclick=downloadStory;$('#downloadTop').onclick=downloadStory;$('#accountButton').onclick=()=>state.user?toast('Passport synced',state.user.email||'You are signed in.'):openDialog($('#loginModal'));
+$('#openScanner').onclick=()=>requireLogin()&&openDialog($('#scannerModal'));$('#startCamera').onclick=startCamera;$('#downloadPassport').onclick=downloadStory;$('#downloadTop').onclick=downloadStory;$('#accountButton').onclick=()=>openDialog(state.user?$('#accountModal'):$('#loginModal'));
 $('#codeForm').onsubmit=event=>{event.preventDefault();redeem($('#codeInput').value)};
+$('#logoutButton').onclick=async()=>{const button=$('#logoutButton');button.disabled=true;try{await api('/auth/logout',{method:'POST'});state.user=null;state.stamps=[];state.recent=[];$('#accountModal').close();renderUser();renderPassport();renderRecent();toast('Signed out','You have been signed out of this passport.')}catch(error){toast('Could not sign out',error.message)}finally{button.disabled=false}};
 $('#demoLogin').onclick=async()=>{try{const result=await api('/auth/demo',{method:'POST',body:'{}'});state.user=result.user;$('#loginModal').close();renderUser();const me=await api('/api/me');state.stamps=me.stamps;state.recent=me.recent;renderPassport();renderRecent();toast('Demo passport ready','Try any of the day codes in the scanner.')}catch(error){toast('Sign-in failed',error.message)}};
 document.querySelectorAll('[data-close]').forEach(button=>button.onclick=()=>button.closest('dialog').close());document.querySelectorAll('dialog').forEach(dialog=>dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close()}));$('#scannerModal').addEventListener('close',stopCamera);
 load();

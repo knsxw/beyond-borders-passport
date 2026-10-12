@@ -116,7 +116,16 @@ app.post('/auth/demo', async (req, res, next) => {
     req.login(rows[0], error => error ? next(error) : res.json({ user: rows[0] }));
   } catch (error) { next(error); }
 });
-app.post('/auth/logout', (req, res, next) => req.logout(error => error ? next(error) : req.session.destroy(() => res.status(204).end())));
+app.post('/auth/logout', (req, res, next) => {
+  req.logout(error => {
+    if (error) return next(error);
+    req.session.destroy(sessionError => {
+      if (sessionError) return next(sessionError);
+      res.clearCookie('connect.sid', { httpOnly: true, sameSite: 'lax', secure: process.env.SESSION_COOKIE_SECURE === 'true' });
+      return res.status(204).end();
+    });
+  });
+});
 
 app.get('/api/admin/session', (req, res) => res.json({ authenticated: Boolean(req.session?.isAdmin), username: req.session?.isAdmin ? adminUsername : null }));
 app.post('/api/admin/login', (req, res) => {

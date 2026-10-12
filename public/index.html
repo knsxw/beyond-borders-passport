@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#123d35">
   <meta name="description" content="Collect SDG stamps across the Beyond Borders experience.">
   <title>Beyond Borders Passport</title>
-  <link rel="stylesheet" href="/styles.css?v=6">
+  <link rel="stylesheet" href="/styles.css?v=7">
 </head>
 <body>
   <header class="topbar">
@@ -84,6 +84,18 @@
     </div>
   </dialog>
 
+  <dialog id="accountModal" class="modal">
+    <div class="modal-card account-card">
+      <button class="close-button" data-close aria-label="Close account">×</button>
+      <div class="account-profile-avatar" id="accountModalAvatar">G</div>
+      <span class="micro-label">Participant account</span>
+      <h2 id="accountModalName">Your passport</h2>
+      <p id="accountModalEmail"></p>
+      <button class="signout-button" id="logoutButton" type="button"><span>Sign out</span><b aria-hidden="true">→</b></button>
+      <small class="auth-note">Your collected stamps stay safely saved to your account.</small>
+    </div>
+  </dialog>
+
   <dialog id="successModal" class="modal">
     <div class="modal-card success-card">
       <button class="close-button" data-close aria-label="Close">×</button><div class="success-mark">✓</div><span class="micro-label">Passport updated</span><h2 id="successTitle">Stamps collected!</h2><p id="successCopy">Your impact has been added to your passport.</p><div class="unlocked-grid" id="unlockedGrid"></div><button class="primary-button" data-close>Back to passport</button>
@@ -92,6 +104,6 @@
 
   <div class="toast" id="toast" role="status"><span>✓</span><div><b id="toastTitle">Done</b><small id="toastCopy">Your passport is up to date.</small></div></div>
   <canvas id="storyCanvas" width="1080" height="1920" hidden></canvas>
-  <script src="/app.js?v=6"></script>
+  <script src="/app.js?v=7"></script>
 </body>
 </html>
