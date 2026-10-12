@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#123d35">
   <meta name="description" content="Collect SDG stamps across the Beyond Borders experience.">
   <title>Beyond Borders Passport</title>
-  <link rel="stylesheet" href="/styles.css?v=5">
+  <link rel="stylesheet" href="/styles.css?v=6">
 </head>
 <body>
   <header class="topbar">
@@ -70,7 +70,7 @@
       <button class="primary-button" id="startCamera">Start camera</button>
       <div class="divider"><i></i><span>or enter the activity code</span><i></i></div>
       <form id="codeForm" class="code-form"><input id="codeInput" autocomplete="off" placeholder="e.g. BEYOND-BORDERS-DAY-3" aria-label="Activity code"><button type="submit">Collect</button></form>
-      <div class="demo-codes" id="demoCodes"></div>
+      <div class="demo-codes" id="demoCodes" hidden></div>
     </div>
   </dialog>
 
@@ -92,6 +92,6 @@
 
   <div class="toast" id="toast" role="status"><span>✓</span><div><b id="toastTitle">Done</b><small id="toastCopy">Your passport is up to date.</small></div></div>
   <canvas id="storyCanvas" width="1080" height="1920" hidden></canvas>
-  <script src="/app.js?v=5"></script>
+  <script src="/app.js?v=6"></script>
 </body>
 </html>

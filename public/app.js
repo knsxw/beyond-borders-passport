@@ -20,8 +20,10 @@ function renderPassport(pop=[]){
 function renderActivities(){
   const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   $('#scheduleList').innerHTML=state.activities.map((activity,index)=>{const [year,month,day]=activity.event_date.slice(0,10).split('-').map(Number),dateLabel=`${String(day).padStart(2,'0')} ${months[month-1]}`;return `<article class="schedule-item"><div class="day-number">Day ${index+1}<b>${dateLabel}</b></div><div class="schedule-copy"><h3>${escapeHtml(activity.title)}</h3><p>${escapeHtml(activity.description)}</p></div><div class="schedule-meta"><p><b>${escapeHtml(activity.time_label)}</b></p><p>${escapeHtml(activity.location)}</p></div><div class="goal-pills">${activity.sdg_ids.map(id=>`<span class="goal-pill" title="Goal ${id}: ${goal(id)[1]}" style="background:${goal(id)[2]}">${String(id).padStart(2,'0')}</span>`).join('')}</div></article>`}).join('');
-  $('#demoCodes').innerHTML=state.activities.map((_,index)=>`<button type="button" data-code="BEYOND-BORDERS-DAY-${index+1}">Day ${index+1} demo</button>`).join('');
-  document.querySelectorAll('[data-code]').forEach(button=>button.onclick=()=>redeem(button.dataset.code));
+  const demoCodes=$('#demoCodes');
+  demoCodes.hidden=!state.config.demoMode;
+  demoCodes.innerHTML=state.config.demoMode?state.activities.map((_,index)=>`<button type="button" data-code="BEYOND-BORDERS-DAY-${index+1}">Day ${index+1} demo</button>`).join(''):'';
+  demoCodes.querySelectorAll('[data-code]').forEach(button=>button.onclick=()=>redeem(button.dataset.code));
 }
 function renderRecent(){
   $('#recentList').innerHTML=state.recent.length?state.recent.map(item=>`<article class="recent-card"><div class="recent-mark">✓</div><div class="recent-copy"><h3>${escapeHtml(item.title)}</h3><p>${new Date(item.earned_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})} · ${escapeHtml(item.location)}</p></div><div class="recent-goals">${item.sdg_ids.map(id=>`<i title="Goal ${id}" style="background:${goal(id)[2]}"></i>`).join('')}</div></article>`).join(''):'<div class="empty-state">Your verified scans will appear here.</div>';
