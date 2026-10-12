@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b2d28">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Beyond Borders Admin</title>
+  <link rel="stylesheet" href="/admin.css?v=2">
+</head>
+<body>
+  <header class="admin-topbar">
+    <a href="/" class="admin-brand"><span class="brand-mark"><i></i><i></i><i></i><i></i></span><span><b>Beyond Borders</b><small>Event administration</small></span></a>
+    <div class="admin-actions" id="adminActions" hidden><span id="adminIdentity">Admin</span><button id="refreshButton">Refresh</button><button id="logoutButton">Sign out</button></div>
+  </header>
+
+  <main>
+    <section class="login-view" id="loginView">
+      <form class="login-card" id="loginForm">
+        <span class="eyebrow">Protected dashboard</span><h1>Event control,<br>all in one place.</h1><p>Sign in to oversee participation and download official activity QR codes.</p>
+        <label>Username<input id="username" name="username" autocomplete="username" required></label>
+        <label>Password<input id="password" name="password" type="password" autocomplete="current-password" required></label>
+        <p class="form-error" id="loginError" role="alert"></p><button class="login-button" type="submit">Open dashboard <span>→</span></button>
+      </form>
+    </section>
+
+    <section class="dashboard-view" id="dashboardView" hidden>
+      <div class="dashboard-heading"><div><span class="eyebrow">Beyond Borders 2026</span><h1>Event overview</h1><p>Live participant scans and QR resources for all six event days.</p></div><span class="live-pill"><i></i> Database connected</span></div>
+      <div class="metric-grid">
+        <article><span>Registered participants</span><b id="participantMetric">0</b><small>Google accounts</small></article>
+        <article><span>Total check-ins</span><b id="scanMetric">0</b><small>Across all event days</small></article>
+        <article><span>Stamps awarded</span><b id="stampMetric">0</b><small>Unique SDG goals</small></article>
+        <article class="accent"><span>Event days</span><b>6</b><small>QR codes ready</small></article>
+      </div>
+      <div class="days-heading"><div><span class="eyebrow">Daily reporting</span><h2>Event days</h2></div><p>Participant details appear after a verified QR scan.</p></div>
+      <div class="admin-days" id="adminDays"><div class="loading">Loading event data…</div></div>
+    </section>
+  </main>
+
+  <div class="admin-toast" id="adminToast" role="status"></div>
+  <script src="/admin.js?v=2"></script>
+</body>
+</html>

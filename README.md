@@ -44,6 +44,35 @@ LIVING-DAY-6
 
 Set `DEMO_MODE=false` in production.
 
+## Admin dashboard
+
+Open `/admin` to oversee event-day scans and download the QR code for each day. The local development defaults are:
+
+```text
+Username: admin
+Password: BeyondBorders2026!
+```
+
+Set unique production credentials in `.env`:
+
+```dotenv
+ADMIN_USERNAME=your-admin-name
+ADMIN_PASSWORD=a-long-unique-password
+```
+
+The dashboard shows participant names, email addresses, scan times, total check-ins, and stamps awarded. Five failed login attempts lock that IP address for 15 minutes.
+
+## Revised day and SDG mapping
+
+| Day | Cultural focus | SDGs |
+| --- | --- | --- |
+| 1 | Thai Culture & Values | 4, 17 |
+| 2 | Thai Language & Identity | 4, 10 |
+| 3 | Thai Culinary Heritage | 2, 3, 6, 12 |
+| 4 | Craftsmanship & Local Wisdom | 4, 8, 11 |
+| 5 | Thai Culture in Action | 3, 10, 12, 17 |
+| 6 | Community, Culture & Local Living | 11, 12, 13, 15 |
+
 ## Google OAuth
 
 Create an OAuth 2.0 Web application in Google Cloud and configure:

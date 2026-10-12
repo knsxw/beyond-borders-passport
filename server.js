@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const path = require('path');
+const crypto = require('crypto');
 const express = require('express');
 const helmet = require('helmet');
 const compression = require('compression');
@@ -9,12 +10,16 @@ const pgSession = require('connect-pg-simple')(session);
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const { Pool } = require('pg');
+const QRCode = require('qrcode');
 
 const app = express();
 const port = Number(process.env.PORT || 8080);
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const googleEnabled = Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
 const demoEnabled = process.env.DEMO_MODE !== 'false';
+const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+const adminPassword = process.env.ADMIN_PASSWORD || 'BeyondBorders2026!';
+const adminAttempts = new Map();
 
 app.set('trust proxy', 1);
 app.use(helmet({
@@ -79,6 +84,17 @@ function requireUser(req, res, next) {
   return res.status(401).json({ error: 'Sign in to collect stamps.' });
 }
 
+function requireAdmin(req, res, next) {
+  if (req.session?.isAdmin) return next();
+  return res.status(401).json({ error: 'Admin authentication required.' });
+}
+
+function constantTimeMatch(input, expected) {
+  const left = Buffer.from(String(input || ''));
+  const right = Buffer.from(String(expected));
+  return left.length === right.length && crypto.timingSafeEqual(left, right);
+}
+
 app.get('/health', (_req, res) => res.json({ ok: true }));
 app.get('/api/config', (_req, res) => res.json({ googleAuth: googleEnabled, demoMode: demoEnabled }));
 
@@ -101,6 +117,58 @@ app.post('/auth/demo', async (req, res, next) => {
   } catch (error) { next(error); }
 });
 app.post('/auth/logout', (req, res, next) => req.logout(error => error ? next(error) : req.session.destroy(() => res.status(204).end())));
+
+app.get('/api/admin/session', (req, res) => res.json({ authenticated: Boolean(req.session?.isAdmin), username: req.session?.isAdmin ? adminUsername : null }));
+app.post('/api/admin/login', (req, res) => {
+  const ip = req.ip || 'unknown';
+  const attempt = adminAttempts.get(ip) || { count: 0, lockedUntil: 0 };
+  if (attempt.lockedUntil > Date.now()) return res.status(429).json({ error: 'Too many attempts. Try again in 15 minutes.' });
+  const valid = constantTimeMatch(req.body?.username, adminUsername) && constantTimeMatch(req.body?.password, adminPassword);
+  if (!valid) {
+    attempt.count += 1;
+    if (attempt.count >= 5) { attempt.lockedUntil = Date.now() + 15 * 60 * 1000; attempt.count = 0; }
+    adminAttempts.set(ip, attempt);
+    return res.status(401).json({ error: 'Incorrect username or password.' });
+  }
+  adminAttempts.delete(ip);
+  req.session.isAdmin = true;
+  req.session.adminUsername = adminUsername;
+  return res.json({ authenticated: true, username: adminUsername });
+});
+app.post('/api/admin/logout', requireAdmin, (req, res) => {
+  req.session.isAdmin = false;
+  delete req.session.adminUsername;
+  req.session.save(() => res.status(204).end());
+});
+
+app.get('/api/admin/overview', requireAdmin, async (_req, res, next) => {
+  try {
+    const [summary, activities] = await Promise.all([
+      pool.query(`SELECT
+        (SELECT COUNT(*)::int FROM users WHERE google_id <> 'demo-user') AS registered_participants,
+        (SELECT COUNT(*)::int FROM scans) AS total_scans,
+        (SELECT COUNT(*)::int FROM stamps) AS total_stamps`),
+      pool.query(`SELECT a.slug, a.title, a.event_date, a.time_label, a.location, a.description, a.sdg_ids, q.code AS qr_code,
+        COALESCE((SELECT JSON_AGG(JSON_BUILD_OBJECT(
+          'name', u.name, 'email', u.email, 'avatar_url', u.avatar_url, 'scanned_at', s.scanned_at
+        ) ORDER BY s.scanned_at DESC)
+        FROM scans s JOIN users u ON u.id = s.user_id WHERE s.activity_slug = a.slug), '[]'::json) AS participants
+        FROM activities a LEFT JOIN qr_codes q ON q.activity_slug = a.slug
+        ORDER BY a.event_date`)
+    ]);
+    res.json({ summary: summary.rows[0], activities: activities.rows });
+  } catch (error) { next(error); }
+});
+
+app.get('/api/admin/activities/:slug/qr.png', requireAdmin, async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(`SELECT a.slug, a.title, q.code FROM activities a JOIN qr_codes q ON q.activity_slug = a.slug WHERE a.slug = $1`, [req.params.slug]);
+    if (!rows[0]) return res.status(404).json({ error: 'Event day not found.' });
+    const png = await QRCode.toBuffer(rows[0].code, { type: 'png', width: 1200, margin: 4, errorCorrectionLevel: 'H', color: { dark: '#123D35', light: '#FFFDF8' } });
+    res.set({ 'Content-Type': 'image/png', 'Content-Disposition': `attachment; filename="beyond-borders-${rows[0].slug}-qr.png"`, 'Cache-Control': 'no-store' });
+    res.send(png);
+  } catch (error) { next(error); }
+});
 
 app.get('/api/activities', async (_req, res, next) => {
   try {
@@ -158,6 +226,7 @@ app.post('/api/stamps/redeem', requireUser, async (req, res, next) => {
   } finally { client.release(); }
 });
 
+app.get(['/admin', '/admin/'], (_req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: process.env.NODE_ENV === 'production' ? '1h' : 0 }));
 app.get('*', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 app.use((error, _req, res, _next) => {
@@ -166,12 +235,12 @@ app.use((error, _req, res, _next) => {
 });
 
 const activities = [
-  ['culture-values', 'Culture & Values', '2026-02-09', '17:00 - 19:00', 'SCIT0101, Assumption University', 'Opening, SDG learning, Thai cultural values, and passport orientation.', [4,9]],
-  ['language-identity', 'Language & Identity', '2026-02-10', '17:00 - 19:00', 'SCIT0101, Assumption University', 'Thai language, cultural etiquette, and inclusive communication.', [4]],
-  ['food-sharing', 'Food & Sharing', '2026-02-11', '17:00 - 19:30', 'Kitchen Room, Assumption University', 'Thai cooking, food hygiene, portion control, and responsible resources.', [2,6,12]],
-  ['craft-play', 'Craft & Play', '2026-02-12', '10:00 - 14:00', 'SM Center, Assumption University', 'Bracelet making and Thai board games for creativity and economic inclusion.', [1,8]],
-  ['culture-action', 'Culture in Action', '2026-02-13', '16:00 - 20:00', 'Football Field, Assumption University', 'Thai games, picnic spaces, community booths, music, and SDG discovery zones.', [3,10,12,16,17]],
-  ['green-living', 'Green Living', '2026-02-15', '08:00 - 15:00', 'Bang Krachao, Bangkok', 'Cycling, nature exploration, photo mapping, and sustainable local lifestyles.', [7,13,14,15]]
+  ['culture-values', 'Thai Culture & Values', '2026-02-09', '17:00 - 19:00', 'SCIT0101, Assumption University', 'Respect, kindness, hospitality, unity, community spirit, and intercultural understanding.', [4,17]],
+  ['language-identity', 'Thai Language & Identity', '2026-02-10', '17:00 - 19:00', 'SCIT0101, Assumption University', 'Thai pronouns, address terms, useful expressions, respectful communication, and cultural exchange.', [4,10]],
+  ['food-sharing', 'Thai Culinary Heritage', '2026-02-11', '17:00 - 19:30', 'Kitchen Room, Assumption University', 'Traditional dishes, local ingredients, food-sharing culture, teamwork, and Thai culinary knowledge.', [2,3,6,12]],
+  ['craft-play', 'Craftsmanship & Local Wisdom', '2026-02-12', '10:00 - 14:00', 'SM Center, Assumption University', 'Bracelet making, creativity, patience, practical skills, and appreciation of Thai craftsmanship.', [4,8,11]],
+  ['culture-action', 'Thai Culture in Action', '2026-02-13', '16:00 - 20:00', 'Football Field, Assumption University', 'Traditional games, food experiences, community spirit, cultural participation, and club collaboration.', [3,10,12,17]],
+  ['green-living', 'Community, Culture & Local Living', '2026-02-15', '08:00 - 15:00', 'Bang Krachao, Bangkok', 'Cycling, local food, floating-market culture, environmental heritage, and sustainable community life.', [11,12,13,15]]
 ];
 
 async function ensureDatabase() {
@@ -207,6 +276,12 @@ async function ensureDatabase() {
     await pool.query(`INSERT INTO qr_codes (code, activity_slug) VALUES ($1,$2) ON CONFLICT (code) DO NOTHING`,
       [`LIVING-DAY-${activities.indexOf(activity)+1}`, activity[0]]);
   }
+  await pool.query(`DELETE FROM stamps`);
+  await pool.query(`INSERT INTO stamps (user_id, sdg_id, activity_slug, earned_at)
+    SELECT DISTINCT ON (s.user_id, goal.sdg_id) s.user_id, goal.sdg_id, s.activity_slug, s.scanned_at
+    FROM scans s JOIN activities a ON a.slug = s.activity_slug
+    CROSS JOIN LATERAL UNNEST(a.sdg_ids) AS goal(sdg_id)
+    ORDER BY s.user_id, goal.sdg_id, s.scanned_at`);
 }
 
 ensureDatabase()
