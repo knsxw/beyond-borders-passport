@@ -15,6 +15,7 @@ const QRCode = require('qrcode');
 const app = express();
 const port = Number(process.env.PORT || 8080);
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const jsQrBrowserPath = require.resolve('jsqr');
 const googleEnabled = Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
 const demoEnabled = process.env.DEMO_MODE !== 'false';
 const adminUsername = process.env.ADMIN_USERNAME || 'admin';
@@ -96,6 +97,10 @@ function constantTimeMatch(input, expected) {
 }
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
+app.get('/vendor/jsqr.js', (_req, res) => {
+  res.set('Cache-Control', 'public, max-age=31536000, immutable');
+  res.sendFile(jsQrBrowserPath);
+});
 app.get('/api/config', (_req, res) => res.json({ googleAuth: googleEnabled, demoMode: demoEnabled }));
 
 app.get('/auth/google', (req, res, next) => {

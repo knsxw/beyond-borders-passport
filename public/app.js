@@ -1,7 +1,7 @@
 const goals=[
   [1,'No Poverty','#e5243b','⌂'],[2,'Zero Hunger','#dda63a','♨'],[3,'Good Health','#4c9f38','♥'],[4,'Quality Education','#c5192d','▰'],[5,'Gender Equality','#ff3a21','⚧'],[6,'Clean Water','#26bde2','◒'],[7,'Clean Energy','#fcc30b','☀'],[8,'Decent Work','#a21942','↗'],[9,'Industry & Innovation','#fd6925','⬡'],[10,'Reduced Inequalities','#dd1367','='],[11,'Sustainable Cities','#fd9d24','▦'],[12,'Responsible Consumption','#bf8b2e','∞'],[13,'Climate Action','#3f7e44','◎'],[14,'Life Below Water','#0a97d9','≈'],[15,'Life on Land','#56c02b','♧'],[16,'Peace & Justice','#00689d','⚖'],[17,'Partnerships','#19486a','◉']
 ];
-const state={user:null,stamps:[],activities:[],recent:[],config:{googleAuth:false,demoMode:false},stream:null,detector:null,scanning:false};
+const state={user:null,stamps:[],activities:[],recent:[],config:{googleAuth:false,demoMode:false},stream:null,detector:null,scanning:false,scanCanvas:null,scanContext:null,scanFrameId:null,lastScanAt:0};
 const $=selector=>document.querySelector(selector);
 
 async function api(url,options={}){const response=await fetch(url,{headers:{'Content-Type':'application/json'},...options});const data=response.status===204?null:await response.json().catch(()=>({}));if(!response.ok)throw new Error(data?.error||'Request failed.');return data}
@@ -50,17 +50,37 @@ async function redeem(code){
 
 async function startCamera(){
   if(!requireLogin())return;
-  if(!('BarcodeDetector' in window)){toast('Camera scanner unsupported','Enter the activity code below instead.');return}
+  if(state.scanning){stopCamera();return}
+  if(!navigator.mediaDevices?.getUserMedia){toast('Camera unavailable',location.protocol==='https:'?'This browser cannot access the camera. Enter the activity code instead.':'Open this website using HTTPS to enable camera access.');return}
   try{
-    state.detector=new BarcodeDetector({formats:['qr_code']});state.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});const camera=$('#camera');camera.querySelector('.camera-copy')?.remove();const video=document.createElement('video');video.autoplay=true;video.playsInline=true;video.srcObject=state.stream;camera.prepend(video);camera.classList.add('scanning');state.scanning=true;scanFrame(video);
-  }catch(error){toast('Camera unavailable','Allow camera access or enter the code manually.')}
+    const camera=$('#camera'),video=document.createElement('video');
+    video.setAttribute('autoplay','');video.setAttribute('playsinline','');video.setAttribute('muted','');video.autoplay=true;video.playsInline=true;video.muted=true;
+    state.detector=null;if('BarcodeDetector' in window){try{state.detector=new BarcodeDetector({formats:['qr_code']})}catch(_error){state.detector=null}}
+    if(!state.detector&&typeof window.jsQR!=='function')throw new Error('QR decoder failed to load.');
+    state.stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}});
+    video.srcObject=state.stream;camera.querySelector('.camera-copy')?.remove();camera.prepend(video);await video.play();
+    camera.classList.add('scanning');state.scanning=true;state.lastScanAt=0;$('#startCamera').textContent='Stop camera';scanFrame(video);
+  }catch(error){stopCamera();const copy=error?.name==='NotAllowedError'?'Allow camera access for this website in your browser settings, then try again.':error?.name==='NotFoundError'?'No camera was found on this device.':error?.name==='NotReadableError'?'The camera is being used by another app. Close it and try again.':error?.message||'Allow camera access or enter the code manually.';toast('Camera unavailable',copy)}
 }
-async function scanFrame(video){
+async function scanFrame(video,timestamp=0){
   if(!state.scanning)return;
-  try{const codes=await state.detector.detect(video);if(codes[0]?.rawValue){state.scanning=false;await redeem(codes[0].rawValue);return}}catch(_error){}
-  requestAnimationFrame(()=>scanFrame(video));
+  if(video.readyState>=2&&video.videoWidth&&timestamp-state.lastScanAt>=100){
+    state.lastScanAt=timestamp;
+    try{
+      let value=null;
+      if(state.detector){try{const codes=await state.detector.detect(video);value=codes[0]?.rawValue||null}catch(_error){state.detector=null}}
+      if(!value&&!state.detector){
+        if(!state.scanCanvas){state.scanCanvas=document.createElement('canvas');state.scanContext=state.scanCanvas.getContext('2d',{willReadFrequently:true})}
+        const scale=Math.min(1,720/video.videoWidth),width=Math.max(1,Math.round(video.videoWidth*scale)),height=Math.max(1,Math.round(video.videoHeight*scale));
+        if(state.scanCanvas.width!==width||state.scanCanvas.height!==height){state.scanCanvas.width=width;state.scanCanvas.height=height}
+        state.scanContext.drawImage(video,0,0,width,height);const image=state.scanContext.getImageData(0,0,width,height);value=window.jsQR(image.data,width,height,{inversionAttempts:'attemptBoth'})?.data||null;
+      }
+      if(value){state.scanning=false;await redeem(value);return}
+    }catch(_error){}
+  }
+  state.scanFrameId=requestAnimationFrame(nextTimestamp=>scanFrame(video,nextTimestamp));
 }
-function stopCamera(){state.scanning=false;state.stream?.getTracks().forEach(track=>track.stop());state.stream=null;const video=$('#camera video');if(video)video.remove();$('#camera').classList.remove('scanning');if(!$('#camera .camera-copy'))$('#camera').insertAdjacentHTML('beforeend','<div class="camera-copy"><span>⌗</span><b>Camera is off</b><small>Tap below to begin</small></div>')}
+function stopCamera(){state.scanning=false;if(state.scanFrameId!==null)cancelAnimationFrame(state.scanFrameId);state.scanFrameId=null;state.stream?.getTracks().forEach(track=>track.stop());state.stream=null;state.detector=null;const video=$('#camera video');if(video)video.remove();$('#camera').classList.remove('scanning');$('#startCamera').textContent='Start camera';if(!$('#camera .camera-copy'))$('#camera').insertAdjacentHTML('beforeend','<div class="camera-copy"><span>⌗</span><b>Camera is off</b><small>Tap below to begin</small></div>')}
 
 function roundedRect(ctx,x,y,w,h,r,fill){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=fill;ctx.fill()}
 function wrapText(ctx,text,x,y,maxWidth,lineHeight,maxLines=3){const words=text.split(' ');let line='',lines=[];for(const word of words){const test=line?`${line} ${word}`:word;if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=word}else line=test}if(line)lines.push(line);lines.slice(0,maxLines).forEach((item,i)=>ctx.fillText(item,x,y+i*lineHeight))}

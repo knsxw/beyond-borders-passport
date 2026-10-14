@@ -9,6 +9,7 @@ A responsive digital stamp passport for the **Beyond Borders 2026** event by AIE
 - Google OAuth 2.0 authentication
 - PostgreSQL-backed participants, QR scans, stamps, and sessions
 - Camera QR scanner with a manual-code fallback
+- iOS Safari QR scanning through the bundled `jsQR` fallback
 - One QR code can award several SDG stamps
 - Duplicate activity and stamp protection
 - Instagram Story passport export generated locally in the browser
@@ -28,6 +29,8 @@ docker compose up --build
 ```
 
 Open `http://localhost:8080`. The database schema and event seed data are created automatically.
+
+Camera access works on `localhost` during development. On phones and other production devices, serve the site over HTTPS; browsers block camera access on insecure HTTP pages.
 
 ## Demo mode
 
